@@ -12,36 +12,82 @@ public class Client {
             Registry registry = LocateRegistry.getRegistry("localhost", 1099);
             InterfaceMovie service = (InterfaceMovie) registry.lookup("MovieService");
 
-            // Collect user input
             Scanner scanner = new Scanner(System.in);
-            System.out.print("--- Welcome to the Movie Recommendation Expert System! --- \n\n");
+            boolean exit = false;
 
-            System.out.print("Enter your preferred genre: ");
-            String genre = scanner.nextLine();
+            System.out.println("\n--- Welcome to the Movie Recommendation Expert System! ---");
+            while (!exit) {
+                System.out.println("\nPlease select an option:");
+                System.out.println("1. Get a Random Movie");
+                System.out.println("2. Recommend a Movie");
+                System.out.println("3. Search for Movies");
+                System.out.println("4. Exit");
 
-            System.out.print("Enter the minimum release year: ");
-            int year = scanner.nextInt();
+                System.out.print("Your choice: ");
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
 
-            System.out.print("Enter minimum popularity (0-10): ");
-            double popularity = scanner.nextDouble();
+                switch (choice) {
+                    case 1: // Random Movie
+                        try {
+                            String randomMovie = service.getRandomMovie();
+                            System.out.println("\n🎥 Random Movie: " + randomMovie);
+                        } catch (Exception e) {
+                            System.out.println("Error fetching random movie: " + e.getMessage());
+                        }
+                        break;
 
-            System.out.print("Enter your favorite actor: ");
-            scanner.nextLine(); // Consume newline
-            String favoriteActor = scanner.nextLine();
+                    case 2: // Recommend Movie
+                        try {
+                            System.out.print("\nEnter your preferred genre: ");
+                            String genre = scanner.nextLine();
 
-            System.out.println("Are you above 18? (yes/no)");
-            String isAbove18 = scanner.nextLine();
-            boolean above18 = isAbove18.equalsIgnoreCase("yes");
+                            System.out.print("Enter the minimum release year: ");
+                            int year = scanner.nextInt();
 
-            // Send this boolean to the server as part of the request
-          //  List<Movie> recommendedMovies = movieService.getMovies(above18);
+                            System.out.print("Enter minimum popularity (0-10): ");
+                            double popularity = scanner.nextDouble();
+                            scanner.nextLine(); // Consume newline
 
+                            System.out.print("Enter your favorite actor: ");
+                            String favoriteActor = scanner.nextLine();
 
-            // Get recommendation
-            String recommendation = service.recommendMovie(genre, year, popularity, favoriteActor, above18);
-            System.out.println("Recommended movie: " + recommendation);
+                            System.out.print("Are you above 18? (yes/no): ");
+                            String isAbove18 = scanner.nextLine();
+                            boolean above18 = isAbove18.equalsIgnoreCase("yes");
 
+                            String recommendation = service.recommendMovie(genre, year, popularity, favoriteActor, above18);
+                            System.out.println("\n🎬 Recommended Movie: " + recommendation);
+                        } catch (Exception e) {
+                            System.out.println("Error fetching recommendation: " + e.getMessage());
+                        }
+                        break;
+
+                    case 3: // Search for Movies
+                        try {
+                            System.out.print("\nEnter a search query (title/description): ");
+                            String query = scanner.nextLine();
+
+                            String searchResults = service.searchMovie(query);
+                            System.out.println("\n🔍 Search Results: \n" + searchResults);
+                        } catch (Exception e) {
+                            System.out.println("Error searching movies: " + e.getMessage());
+                        }
+                        break;
+
+                    case 4: // Exit
+                        System.out.println("\nThank you for using the Movie Recommendation System! Goodbye!");
+                        exit = true;
+                        break;
+
+                    default:
+                        System.out.println("\nInvalid choice! Please try again.");
+                }
+            }
+
+            scanner.close();
         } catch (Exception e) {
+            System.out.println("Error connecting to the server: " + e.getMessage());
             e.printStackTrace();
         }
     }
