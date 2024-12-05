@@ -5,6 +5,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import Shared.InterfaceMovie;
 import java.util.stream.Collectors;
@@ -37,7 +39,6 @@ public class ServiceImplement extends UnicastRemoteObject implements InterfaceMo
 	    movieDatabase.add(new Movie("The Dark Knight", "Action", 2008, 9.0, "Christian Bale", true, "When the menace known as the Joker emerges from his mysterious past, he wreaks havoc and chaos on the people of Gotham.", 9.1));
 	    movieDatabase.add(new Movie("12 Angry Men", "Drama", 1957, 8.9, "Henry Fonda", true, "A jury holdout attempts to prevent a miscarriage of justice by forcing his colleagues to reconsider the evidence.", 8.8));
 	    movieDatabase.add(new Movie("The Lord of the Rings: The Return of the King", "Action", 2003, 8.9, "Elijah Wood", true, "Gandalf and Aragorn lead the World of Men against Sauron's army to save Middle-earth.", 8.7));
-
 	    movieDatabase.add(new Movie("Pulp Fiction", "Crime", 1994, 8.9, "John Travolta", true, "The lives of two mob hitmen, a boxer, a gangster's wife, and a pair of diner bandits intertwine in four tales of violence and redemption.", 8.9));
 	    movieDatabase.add(new Movie("The Good, the Bad and the Ugly", "Western", 1966, 8.8, "Clint Eastwood", true, "A bounty hunting scam joins two men in an uneasy alliance against a third in a race to find a fortune in gold buried in a remote cemetery.", 8.8));
 	    movieDatabase.add(new Movie("Fight Club", "Drama", 1999, 8.8, "Edward Norton", true, "An insomniac office worker forms an underground fight club with a soap maker.", 8.7));
@@ -166,7 +167,7 @@ public class ServiceImplement extends UnicastRemoteObject implements InterfaceMo
 
 
   @Override
-  public String getRandomMovie() throws RemoteException {
+  public synchronized String getRandomMovie() throws RemoteException {
     final ResultWrapper result = new ResultWrapper();
 
     Thread randomMovieThread = new RandomMovieThread(result);
@@ -235,16 +236,14 @@ public class ServiceImplement extends UnicastRemoteObject implements InterfaceMo
         .orElse("No recommendations match your preferences!");
       this.result.recommendation = recommendation;
 
+      return "ok";}
 
-      return "ok";
-
-    }
 
     @Override
     public void run() {
       System.out.println("Handle recommentation request for client: " + Thread.currentThread().getName());
       handleRecommendation();
-      System.out.println("Finished handling request for client: " + Thread.currentThread().getName());
+      System.out.println("Finished handling request for client: " + Thread.currentThread().getName()+"\n");
     }
   }
 
@@ -260,7 +259,7 @@ public class ServiceImplement extends UnicastRemoteObject implements InterfaceMo
 
     }
 
-    private String handleSearch() {
+    private synchronized String handleSearch() {
       System.out.println("Handling movie recommendation...");
       List < String > searchList = movieDatabase.stream()
         .filter(movie -> movie.getTitle().toLowerCase().contains(query.toLowerCase()) ||
@@ -281,7 +280,7 @@ public class ServiceImplement extends UnicastRemoteObject implements InterfaceMo
     public void run() {
       System.out.println("Handle Search request for client: " + Thread.currentThread().getName());
       handleSearch();
-      System.out.println("Finished handling search request for client: " + Thread.currentThread().getName());
+      System.out.println("Finished handling search request for client: " + Thread.currentThread().getName()+"\n");
     }
   }
 
@@ -316,7 +315,7 @@ public class ServiceImplement extends UnicastRemoteObject implements InterfaceMo
     public void run() {
       System.out.println("Handle Random Movie request for client in: " + Thread.currentThread().getName());
       handleRandomMovie();
-      System.out.println("Finished handling Random Movie request for client in: " + Thread.currentThread().getName());
+      System.out.println("Finished handling Random Movie request for client in: " + Thread.currentThread().getName()+"\n");
     }
   }
 
@@ -326,7 +325,7 @@ public class ServiceImplement extends UnicastRemoteObject implements InterfaceMo
   private static class ResultWrapper {
 	    String recommendation;
 	  }
-  
+
 
   // Movie class
   static class Movie {
@@ -386,11 +385,19 @@ public class ServiceImplement extends UnicastRemoteObject implements InterfaceMo
     // Add getters and override toString to include description and rating
     @Override
     public String toString() {
+String url="";
+      String searchQuery = title + " Movie Trailer";
+                try{  String encodedQuery = URLEncoder.encode(searchQuery, StandardCharsets.UTF_8.toString());
+                  url = "https://www.youtube.com/results?search_query=" + encodedQuery;
+                } catch (Exception e) {
+                           e.printStackTrace();
+                       }
       return title + " (" + year + ") - Genre: " + genre +
         "\nPopularity: " + popularity +
         "\nRating: " + rating + "/10" +
         "\nDescription: " + description +
-        "\nLead Actor: " + leadActor +"\n";
+        "\nLead Actor: " + leadActor +
+        "\nWatch Trailer : " + url +"\n";
     }
   }
 

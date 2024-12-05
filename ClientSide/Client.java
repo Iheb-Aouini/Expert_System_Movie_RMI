@@ -39,7 +39,7 @@ public class Client {
 
                     case 2: // Recommend Movie
                         try {
-                            System.out.print("\nEnter your preferred genre: ");
+                            System.out.print("\nEnter your preferred genre(Sci-Fi,Action,Comedy,Drama,Crime,Biography,Romance...) : ");
                             String genre = scanner.nextLine();
 
                             System.out.print("Enter the minimum release year: ");
